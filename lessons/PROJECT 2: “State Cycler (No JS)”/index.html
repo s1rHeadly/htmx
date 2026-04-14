@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <title>State Cycler (No JS)</title>
+  </head>
+  <body>
+    <!--@
+  
+  Goal
+
+    Build a system where clicking Next cycles through steps:
+
+    Step 1 → Step 2 → Step 3 → Step 1
+    No JavaScript state
+    State is stored in:
+    URL (?step=)
+    or hidden field (input[name="step"])
+  
+  @-->
+
+    <div id="app">
+      <button hx-get="step-1.html" hx-target="#app" hx-swap="innerHTML">
+        Start
+      </button>
+    </div>
+  </body>
+</html>

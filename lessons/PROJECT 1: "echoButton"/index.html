@@ -17,6 +17,20 @@
 
     No JS. No fetch. No render logic.
 
+    🧠 The key idea
+
+    Instead of:
+
+    “Browser remembers which message is next”
+
+    HTMX does:
+
+    “Server decides what the next message is every request”
+
+    So the cycle happens like this:
+
+    Click → request → server responds → server decides next state
+
     @-->
 
     <button hx-get="message.html" hx-target="#output" hx-swap="innerHTML">

@@ -67,11 +67,11 @@ How content is inserted.
 
 Common values:
 
-| Value       | Role (typical)   |
-|------------|------------------|
-| `innerHTML` | Default — replace inside the target |
-| `outerHTML` | Replace the target element itself |
-| `beforeend` | Insert before the end of the target |
+| Value       | Role (typical)                          |
+| ----------- | --------------------------------------- |
+| `innerHTML` | Default — replace inside the target     |
+| `outerHTML` | Replace the target element itself       |
+| `beforeend` | Insert before the end of the target     |
 
 Example:
 
@@ -113,21 +113,21 @@ When the request fires.
 
 What this means:
 
-| Piece | Meaning |
-|-------|---------|
-| `hx-post="./?a=29704"` | HTMX sends a POST to the Squiz asset URL |
-| Server response | HTML (e.g. thank-you page asset) |
-| HTMX behavior | Replaces the form content with that HTML — **no full page reload** |
+| Piece                  | Meaning                                                                 |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `hx-post="./?a=29704"` | HTMX sends a POST to the Squiz asset URL                                |
+| Server response        | HTML (e.g. thank-you page asset)                                        |
+| HTMX behavior          | Replaces the form content with that HTML — **no full page reload**      |
 
 ---
 
 ## Important concept: server-driven UI
 
-| Traditional JS | HTMX |
-|----------------|------|
-| You control DOM updates | Server returns HTML fragments |
-| You parse JSON | HTMX inserts them into the DOM |
-| You manually render UI | — |
+| Traditional JS             | HTMX                               |
+| -------------------------- | ---------------------------------- |
+| You control DOM updates    | Server returns HTML fragments      |
+| You parse JSON             | HTMX inserts them into the DOM     |
+| You manually render UI     | —                                  |
 
 This pattern is **server-driven UI** (not client-driven UI).
 
@@ -170,3 +170,25 @@ For Matrix, forms, and dynamic UI, HTMX helps you:
 - Work naturally with server templates (e.g. Squiz)
 
 It’s a strong fit for **CMS-driven sites**.
+
+---
+
+## Mental model check (echo / fragment flow)
+
+When you click:
+
+`BUTTON → GET message.html → HTML returned → injected into #output`
+
+No JS. No fetch. No render logic.
+
+### The key idea
+
+- **Traditional:** “The browser remembers which message is next.”
+- **HTMX:** “The server decides what the next message is on every request.”
+
+So the cycle is:
+
+1. Click
+2. Request
+3. Server responds
+4. Server decides the next state

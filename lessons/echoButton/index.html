@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <title>Echo Button</title>
+  </head>
+  <body>
+    <h1>Echo Button</h1>
+
+    <!--@
+
+    Mental model check
+    When you click:
+    BUTTON → GET message.html → HTML returned → injected into #output
+
+    No JS. No fetch. No render logic.
+
+    @-->
+
+    <button hx-get="message.html" hx-target="#output" hx-swap="innerHTML">
+      Load Message
+    </button>
+
+    <div id="output">Waiting...</div>
+
+
+    <button hx-get="message1.html" hx-target="#output1" hx-swap="innerHTML">
+      Load Message
+    </button>
+
+    <div id="output1">Waiting...</div>
+
+
+    <button hx-get="message2.html" hx-target="#output2" hx-swap="innerHTML">
+      Load Message
+    </button>
+
+    <div id="output2">Waiting...</div>
+  </body>
+
+  </body>
+</html>

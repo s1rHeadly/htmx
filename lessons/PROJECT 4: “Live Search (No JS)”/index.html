@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <link rel="stylesheet" href="./css/styles.css" />
+
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  </head>
+
+  <body>
+    <div class="app">
+      <h1>Live Search</h1>
+
+      <input
+        type="text"
+        name="query"
+        placeholder="Type something..."
+        hx-get="/search"
+        hx-trigger="keyup changed delay:300ms"
+        hx-target="#results"
+        hx-swap="innerHTML"
+        hx-indicator="#loading"
+      />
+      <div id="loading" class="loading">Loading...</div>
+
+      <div id="results"></div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub profile search</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  </head>
+  <body>
+    <div class="app">
+      <h1>GitHub profile search</h1>
+      <label class="search-label">
+        Search users
+        <input
+          type="search"
+          name="query"
+          autocomplete="off"
+          placeholder="Type a username…"
+          hx-get="/search"
+          hx-trigger="keyup changed delay:300ms"
+          hx-target="#results"
+          hx-swap="innerHTML"
+          hx-indicator="#loading"
+        />
+      </label>
+      <div id="loading" class="loading" aria-live="polite">Searching…</div>
+      <div id="results"></div>
+    </div>
+  </body>
+</html>

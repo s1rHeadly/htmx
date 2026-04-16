@@ -1,0 +1,13 @@
+{
+  "name": "github-profile-search-hono",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.0",
+    "hono": "^4.7.0"
+  }
+}

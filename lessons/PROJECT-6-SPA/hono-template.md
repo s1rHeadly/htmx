@@ -1,45 +1,88 @@
-# Hono template — project tour and local setup
+# Hono + HTMX starter — tutorial for junior developers
 
-This note is for junior developers. It walks through **each file** in this starter, shows the important code where it helps, explains **what Hono is doing**, and how to **run the app on localhost**.
-
-## What is Hono?
-
-[Hono](https://hono.dev/) is a small, fast web framework. You define **routes** (for example: when someone sends `GET /`, run this function and return a response). Hono matches incoming HTTP requests to your handlers. It uses the same **Fetch API** shape as modern browsers (`Request` / `Response`), which is why you wire the app to Node with `fetch: app.fetch`.
-
-On **Node.js**, you use the `hono` package together with **`@hono/node-server`**, which opens a TCP port and forwards each request to your Hono app.
-
-## What this starter does (big picture)
-
-1. **`package.json`** declares dependencies and a `start` script that runs `src/server.js`.
-2. **`src/server.js`** creates a Hono app, registers `GET /` to return plain text, and calls `serve()` so the process listens on **port 3000**.
-3. **`data/bookdata.js`** and **`public/css/styles.css`** are scaffolding for later (APIs or HTML pages); the running server does not use them yet.
+This guide walks you through **building the file structure**, **what each file does**, **how the server decides static files vs API**, and **how to test locally**. It ends with the mental model you need before you add **HTMX** (which will connect the HTML page to the `/books` API).
 
 ---
 
-## Project structure
+## What is Hono?
+
+[Hono](https://hono.dev/) is a small web framework. You register **routes**: “when a request is `GET /books`, run this function and return a response.” On Node.js you pair **`hono`** with **`@hono/node-server`**, which listens on a TCP port and forwards each request to your app via **`app.fetch`**.
+
+---
+
+## Simple mental model: how one request becomes a response
+
+Think of your server like this:
+
+```text
+IF the request can be satisfied by a file under /public
+    return that file (HTML, CSS, images, etc.)
+ELSE
+    fall through to your Hono routes (API, custom handlers, …)
+```
+
+In this project, **static files are registered first** with `serveStatic`. If there is no matching file, Hono continues to the next handlers — for example **`GET /books`**, which returns **JSON**.
+
+That order matters: put **“files from disk”** before **“computed responses”** so `/css/styles.css` is served as a file, while `/books` is handled by your API route.
+
+---
+
+## How the whole project works (current state)
+
+| Piece | Role |
+|--------|------|
+| **Node + `@hono/node-server`** | Listens on port **3000** and passes HTTP requests into your Hono app. |
+| **`serveStatic({ root: "./public" })`** | Maps URLs to files under `public/` (e.g. `/index.html` → `public/index.html`). |
+| **`app.get("/books", …)`** | Does **not** read a file; runs code and returns **JSON** from in-memory data. |
+| **`data/bookdata.js`** | Source of truth for the book list **on the server**; imported by `server.js`. |
+| **`public/index.html`** | A normal static page the browser loads; **it does not yet call `/books`** (HTMX will do that next). |
+
+**Data flow today:**
+
+1. Browser asks for a URL.
+2. Hono runs middleware/routes **in order**.
+3. Static middleware tries `public/…`. If found → file bytes + correct content type.
+4. If not a static file, route handlers run (e.g. `/books` → `c.json(BOOKS_DATA)`).
+
+So you already have **two layers**: **static frontend files** and a **JSON API**. They are **separate** until HTMX (or `fetch`) connects them.
+
+---
+
+## Project structure (what you should have)
+
+Create folders and files in this shape (paths are relative to the project root, e.g. `PROJECT-6-SPA/`):
 
 ```text
 PROJECT-6-SPA/
-├── package.json          # Name, scripts, dependencies, ES module mode
-├── package-lock.json     # Locked dependency tree (npm creates/updates this)
-├── .gitignore            # Files and folders git should not track
-├── hono-template.md      # This document
+├── package.json
+├── package-lock.json     # created by npm install
+├── .gitignore
+├── hono-template.md      # this document
 ├── src/
-│   └── server.js         # Hono app + Node server entry point
+│   └── server.js         # Hono app: static files + /books API + listen
 ├── data/
-│   └── bookdata.js       # Sample data (not imported by server.js yet)
+│   └── bookdata.js       # Book records (imported by server.js)
 └── public/
+    ├── index.html        # Static page (browser entry)
     └── css/
-        └── styles.css    # Global styles (not served until you add static/HTML)
+        └── styles.css    # Styles (linked from index.html as /css/styles.css)
 ```
 
 ---
 
-## File by file
+## Step-by-step: add the structure and implement each file
 
-### `package.json`
+Follow these in order. After each major step you can run `npm start` and re-test (see [Local testing](#local-testing-first-things-to-try)).
 
-**What it does:** Names the project, sets **`"type": "module"`** so Node treats `.js` files as ES modules (`import` / `export`), defines **`npm start`**, and lists **`hono`** and **`@hono/node-server`**.
+### Step 1 — `package.json`
+
+**Goal:** ES modules, dependencies, and a start script.
+
+- Set **`"type": "module"`** so you can use `import` / `export` in `.js` files.
+- Depend on **`hono`** and **`@hono/node-server`**.
+- Add **`"start": "node src/server.js"`**.
+
+Example:
 
 ```json
 {
@@ -57,48 +100,30 @@ PROJECT-6-SPA/
 }
 ```
 
-### `package-lock.json`
+Then from the project root:
 
-**What it does:** Records the exact versions npm installed so installs are repeatable. You do not edit it by hand; **`npm install`** creates or updates it.
+```bash
+npm install
+```
 
-*(No snippet — file is long and machine-generated.)*
+---
 
-### `.gitignore`
+### Step 2 — `.gitignore`
 
-**What it does:** Tells git to skip **`node_modules/`** (dependencies) and **`.env`** (secrets you might add later), so they are not committed.
+**Goal:** Do not commit dependencies or local secrets.
 
 ```gitignore
 node_modules/
 .env
 ```
 
-### `src/server.js`
+---
 
-**What it does:** This is the **Hono starter in one file**.
+### Step 3 — `data/bookdata.js`
 
-- **`new Hono()`** — empty app.
-- **`app.get("/", ...)`** — handler for `GET /`; **`c`** is the request context; **`c.text()`** returns a plain-text response.
-- **`serve({ fetch: app.fetch, port: 3000 })`** — Node adapter listens on port **3000** and passes each request to **`app.fetch`**.
+**Goal:** One place for sample books; the API will import this.
 
-```javascript
-import { Hono } from "hono";
-import { serve } from "@hono/node-server";
-
-const app = new Hono();
-
-app.get("/", (c) => {
-  return c.text("Hono is running ✅");
-});
-
-serve({
-  fetch: app.fetch,
-  port: 3000,
-});
-```
-
-### `data/bookdata.js`
-
-**What it does:** Holds sample **book** records as a JavaScript array. **`export default`** lets another file `import` it when you add a route like `GET /api/books`. **The current `server.js` does not import this file.**
+- Use **`export default`** so `server.js` can `import BOOKS_DATA from "../data/bookdata.js"` (path adjusted if your `server.js` lives in `src/`).
 
 ```javascript
 const BOOKS_DATA = [
@@ -109,40 +134,83 @@ const BOOKS_DATA = [
 export default BOOKS_DATA;
 ```
 
-### `public/css/styles.css`
+---
 
-**What it does:** Shared CSS (variables, typography, layout). Browsers only load it once you serve **HTML** that links to `/css/styles.css` (for example with Hono’s static file middleware). **The starter has no HTML route yet**, so this file is unused until you extend the app.
+### Step 4 — `public/` (static assets)
 
-```css
-@import url("https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap");
+**Goal:** Files the browser requests **by URL path**, without you writing a route per file.
 
-:root {
-  --color-text: #333333;
-  --color-text-muted: #777777;
-  /* ... more design tokens and rules below ... */
-}
+#### Why `public` exists
+
+- **`serveStatic`** uses a **root folder** on disk (`./public`). The URL path is mapped under that root.
+- Examples:
+  - `GET /index.html` → file `public/index.html`
+  - `GET /css/styles.css` → file `public/css/styles.css`
+- These responses are **not** generated by `app.get` handlers; the static middleware reads the file and returns it.
+
+#### `public/index.html`
+
+A minimal page is enough for this phase. **Always link the stylesheet** in `<head>` so the browser requests `/css/styles.css` and you prove static CSS works the same way as HTML:
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Books App</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <h1>Books App</h1>
+    <button>Load Books</button>
+  </body>
+</html>
 ```
 
-### `hono-template.md`
+#### `public/css/styles.css`
 
-**What it does:** This markdown file — a map of the repo and how to run it locally.
-
----
-
-## Prerequisites
-
-- **Node.js** installed (LTS is fine). Check with:
-
-  ```bash
-  node -v ```
-
-  You should see a version number (for example `v20.x` or `v22.x`).
+Keep shared CSS here. With the `<link>` above, the browser loads it from **`GET /css/styles.css`** (served from `public/css/styles.css`).
 
 ---
 
-## How to run on localhost
+### Step 5 — `src/server.js`
 
-From the **project root** (the folder that contains `package.json`), run:
+**Goal:** One Hono app that (1) serves `public/`, (2) exposes **`GET /books`** as JSON, (3) listens on port **3000**.
+
+Implementation pattern:
+
+1. **Import** `Hono`, `serve`, `serveStatic`, and your data.
+2. **`const app = new Hono()`**
+3. **Register static serving first** — `app.use("/*", serveStatic({ root: "./public" }))`  
+   - Paths are relative to the **current working directory** when you run `npm start` (project root), so `./public` is correct if you start the server from the folder that contains `public/`.
+4. **Register API route** — `app.get("/books", (c) => c.json(BOOKS_DATA))`
+5. **`serve({ fetch: app.fetch, port: 3000 })`**
+
+Your project’s server file should match this idea (see the real `src/server.js` in the repo for the exact version).
+
+---
+
+## How the Hono API part works (not the same as static files)
+
+- **`app.get("/books", handler)`** runs **only when** the method is **GET** and the path is **`/books`** (and static middleware did not already respond with a file).
+- **`c`** is the **context**: request details plus helpers.
+- **`c.json(BOOKS_DATA)`** sets the response body to JSON and the right `Content-Type`.
+
+So:
+
+| URL | Typical handler |
+|-----|------------------|
+| `/index.html`, `/css/styles.css`, … | **`serveStatic`** → read from `public/` |
+| `/books` | **`app.get("/books", …)`** → `c.json(...)` |
+
+There is **no automatic link** between `index.html` and `/books` until you add client-side behavior (HTMX, `fetch`, form, etc.).
+
+---
+
+## Run the server
+
+From the **project root** (directory that contains `package.json`):
 
 ```bash
 cd "/path/to/PROJECT-6-SPA"
@@ -152,16 +220,112 @@ npm start
 
 | Command | What happens |
 |--------|----------------|
-| **`npm install`** | Reads `package.json`, downloads `hono` and `@hono/node-server` into `node_modules/`, and creates or updates `package-lock.json`. |
-| **`npm start`** | Runs **`node src/server.js`** (the `"start"` script in `package.json`). |
+| **`npm install`** | Installs `hono` and `@hono/node-server` into `node_modules/` and writes/updates `package-lock.json`. |
+| **`npm start`** | Runs **`node src/server.js`**. |
 
-When the server is up, open:
+Stop the server with **Ctrl+C** in the terminal.
 
-[http://localhost:3000](http://localhost:3000)
+---
 
-You should see plain text like: **`Hono is running ✅`**.
+## Local testing — first things to try
 
-To stop the server, focus the terminal and press **Ctrl+C**.
+### 1) Static HTML (and CSS)
+
+Open:
+
+[http://localhost:3000/index.html](http://localhost:3000/index.html)
+
+You should see the **Books App** heading and the button, **with styles from** `styles.css` (typography, colors, layout — not plain browser defaults). In DevTools → **Network**, confirm **`styles.css`** returns **200** from the same origin.
+
+If your static setup also serves a default document for `/`, you can try [http://localhost:3000/](http://localhost:3000/) as well — behavior depends on `serveStatic` and whether `public/index.html` exists.
+
+You can also open [http://localhost:3000/css/styles.css](http://localhost:3000/css/styles.css) directly to verify the raw CSS is served.
+
+### 2) API JSON
+
+Open:
+
+[http://localhost:3000/books](http://localhost:3000/books)
+
+You should see **raw JSON** (the array from `BOOKS_DATA`).
+
+### Step check (current state)
+
+You now have:
+
+| Layer | Status |
+|--------|--------|
+| **Server** | Hono on Node, port **3000** |
+| **Static files** | `serveStatic` → `public/` |
+| **API** | **`GET /books`** → JSON |
+| **Frontend** | `public/index.html` + `/css/styles.css` (static; button not wired yet) |
+
+### What this confirms
+
+If both URLs work:
+
+| Check | Meaning |
+|--------|---------|
+| **`/index.html` shows your page (styled)** | Static HTML + CSS from `public/` work. |
+| **`/books` shows JSON** | API route works. |
+| **No conflicts** | Ordering is correct: static first, then routes. |
+
+That trio is the **foundation** for the rest of the project.
+
+---
+
+## Very important concept before HTMX
+
+Right now your system is:
+
+1. **Static page** — e.g. `/index.html` (markup only).
+2. **API** — `/books` → JSON.
+
+They are **not connected**: the button does nothing, and the browser does not automatically load `/books` when you open the HTML file.
+
+**HTMX is what connects them** (or you could use `fetch` — this course uses HTMX). Same server flow as today: browser sends a request, server responds; HTMX swaps HTML fragments or triggers requests without you writing a full client-side framework.
+
+---
+
+## Mental model: `/books` in five steps
+
+When you visit [http://localhost:3000/books](http://localhost:3000/books):
+
+1. Browser sends **`GET /books`**
+2. Node receives it and passes it to **`app.fetch`**
+3. Static middleware looks for `public/books` — **no file** → continue
+4. **`app.get("/books", …)`** runs → **`c.json(BOOKS_DATA)`**
+5. Browser displays JSON
+
+Your terminal is **where the process runs**, not where the UI lives. The browser is the UI.
+
+---
+
+## File-by-file reference
+
+### `package.json`
+
+Names the project, enables ES modules (`"type": "module"`), defines **`npm start`**, lists dependencies.
+
+### `package-lock.json`
+
+Exact versions for reproducible installs. Do not edit by hand; **`npm install`** maintains it.
+
+### `src/server.js`
+
+Entry point: static middleware, **`GET /books`**, **`serve()`** on port **3000**.
+
+### `data/bookdata.js`
+
+Default-exported array; imported only on the server (safe place for data you will later replace with a database).
+
+### `public/index.html` / `public/css/styles.css`
+
+Served as static files; URLs are **paths from the site root**, not file system paths.
+
+### `hono-template.md`
+
+This tutorial.
 
 ---
 
@@ -169,10 +333,8 @@ To stop the server, focus the terminal and press **Ctrl+C**.
 
 | Package | Role |
 |---------|------|
-| **`hono`** | `Hono` class, routing, context helpers (`c.text`, `c.json`, `c.html`, …). |
-| **`@hono/node-server`** | **`serve()`** — binds your app to a port on Node. |
-
-The project uses **ES modules** because of **`"type": "module"`** in `package.json`.
+| **`hono`** | `Hono`, routing, **`c.text`**, **`c.json`**, **`c.html`**, … |
+| **`@hono/node-server`** | **`serve()`** and **`serveStatic`** on Node |
 
 ---
 
@@ -180,16 +342,17 @@ The project uses **ES modules** because of **`"type": "module"`** in `package.js
 
 | Symptom | What to try |
 |---------|-------------|
-| `command not found: npm` | Install Node.js from [nodejs.org](https://nodejs.org/) or your package manager. |
-| `EADDRINUSE` / port in use | Another process is using port **3000**. Stop it, or change **`port`** in `src/server.js`. |
-| Blank page or connection refused | Confirm **`npm start`** is still running and the URL is **`http://localhost:3000`** (not `https` unless you add TLS). |
+| `command not found: npm` | Install Node.js from [nodejs.org](https://nodejs.org/). |
+| `EADDRINUSE` / port in use | Stop the other process or change **`port`** in `serve({ … })`. |
+| Connection refused | Ensure **`npm start`** is running; use **`http://localhost:3000`** (not `https` unless you add TLS). |
+| `/books` works but CSS missing / unstyled page | Ensure `<link rel="stylesheet" href="/css/styles.css" />` is in `<head>`; confirm `public/css/styles.css` exists; run **`npm start`** from project root. |
+| 404 on static files | Run **`npm start`** from the project root so `./public` resolves correctly. |
 
 ---
 
-## Next steps (when you extend the app)
+## Next steps (HTMX)
 
-- Add routes with **`app.get`**, **`app.post`**, and so on.
-- Return JSON with **`c.json({ ... })`** for APIs (you can **`import`** `data/bookdata.js` in `server.js`).
-- Serve **`public/`** with Hono’s static middleware and add HTML that links **`/css/styles.css`**.
+- Add HTMX to `index.html` and wire **Load Books** to **`GET /books`** (or a new route that returns **HTML fragments** — common with HTMX).
+- Keep the same mental model: **request → Hono → response**; only the **trigger** (HTMX attributes) and **response shape** (HTML vs JSON) change.
 
-The mental model stays the same: **one Hono app**, **one `serve()` call**, and **handlers** that turn requests into responses.
+The architecture stays: **one Hono app**, **one `serve()`**, **static layer + routes**, and the browser as the client.

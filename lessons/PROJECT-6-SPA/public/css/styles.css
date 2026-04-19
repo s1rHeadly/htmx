@@ -1,0 +1,126 @@
+@import url("https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap");
+
+:root {
+  --color-text: #333333;
+  --color-text-muted: #777777;
+  --color-surface: #f4f4f4;
+  --color-border: #e9e9e9;
+  --color-accent: #ef4444;
+  --color-on-accent: #ffffff;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+
+  --space-xs: 4px;
+  --space-sm: 10px;
+  --space-md: 20px;
+  --space-lg: 30px;
+  --space-xl: 60px;
+
+  --font-sans: "Rubik", system-ui, sans-serif;
+  --content-width: 600px;
+  --border-hairline: 1px solid var(--color-border);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  padding: var(--space-md);
+  font-family: var(--font-sans);
+  color: var(--color-text);
+}
+
+main {
+  width: var(--content-width);
+  margin-inline: auto;
+}
+
+h1,
+h2,
+h3,
+header {
+  text-align: center;
+}
+
+header {
+  padding-bottom: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.book-list > button {
+  width: 100px;
+  margin: var(--space-md) auto;
+  display: block;
+}
+
+.book-list ul {
+  padding: var(--space-sm) var(--space-md);
+  list-style-type: none;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+}
+
+.book-list li {
+  border-bottom: var(--border-hairline);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-block: var(--space-md);
+}
+
+.book-list li > div {
+  margin-right: auto;
+}
+
+.book-list li:last-child {
+  border-bottom: none;
+}
+
+.book-list li h3,
+.books li p {
+  text-align: left;
+  margin-bottom: 0;
+  margin-top: var(--space-xs);
+}
+
+.book-list li p {
+  color: var(--color-text-muted);
+}
+
+input,
+button {
+  padding: var(--space-sm);
+  font-family: var(--font-sans);
+  border-radius: var(--radius-sm);
+}
+
+form {
+  display: flex;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+form button {
+  margin-left: auto;
+}
+
+form input {
+  flex-grow: 1;
+  border: var(--border-hairline);
+}
+
+.add-book-form {
+  margin-top: var(--space-xl);
+}
+
+button {
+  background-color: var(--color-accent);
+  color: var(--color-on-accent);
+  border: none;
+}

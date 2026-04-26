@@ -18,13 +18,40 @@ const app = new Hono();
 // If there is NO file for that path, Hono skips ahead to the next handler
 // (so /books is not a file — it reaches the route).
 
-// “Think of rhe public folder as the web root”
+// Think of the public folder as the web root.
 app.use("/*", serveStatic({ root: "./public" }));
 
-// --- API route: return JSON (good for fetch() or for HTMX later) ------------
-// GET /books → browser or JavaScript receives the book list as JSON.
-// `c` is the "context": it holds the request and helpers like c.json().
+// --- HTMX fragment route -------------------------------------------------------
+// GET /books returns HTML (not JSON). HTMX swaps this directly into #output.
+// `c` is the "context": it holds request/response helpers like c.html().
 app.get("/books", (c) => c.html(renderBookList(BOOKS_DATA)));
+
+app.post("/books", async (c) => {
+  // parseBody() reads form fields sent by HTMX from <form hx-post="/books">.
+  const body = await c.req.parseBody();
+  const title = String(body.title ?? "").trim();
+  const author = String(body.author ?? "").trim();
+
+  // Server-side validation still matters even if the browser has `required`.
+  // Never trust only client-side checks.
+  if (!title || !author) {
+    return c.html(
+      `<p class="form-error">Both title and author are required.</p>${renderBookList(BOOKS_DATA)}`,
+      400,
+    );
+  }
+
+  const newBook = {
+    id: Date.now(),
+    title,
+    author,
+  };
+
+  // Lesson note: this is in-memory only. Restarting Node resets this array.
+  BOOKS_DATA.push(newBook);
+
+  return c.html(renderBookList(BOOKS_DATA));
+});
 
 // --- Start listening ------------------------------------------------------------
 // Opens port 3000. Your terminal shows the server running; visit:

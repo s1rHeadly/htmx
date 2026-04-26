@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap");
 
+/* Shared tokens make HTML + server-rendered fragments look consistent. */
 :root {
   --color-text: #333333;
   --color-text-muted: #777777;
@@ -36,6 +37,8 @@ body {
   color: var(--color-text);
 }
 
+
+
 main {
   width: var(--content-width);
   margin-inline: auto;
@@ -53,7 +56,13 @@ header {
   margin-bottom: var(--space-lg);
 }
 
-.book-list > button {
+
+.load-btn {
+  display: block;
+  margin: var(--space-md) auto;
+}
+
+.book-list>button {
   width: 100px;
   margin: var(--space-md) auto;
   display: block;
@@ -74,8 +83,11 @@ header {
   padding-block: var(--space-md);
 }
 
-.book-list li > div {
-  margin-right: auto;
+.book-list li>div {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row;
+  flex: 1;
 }
 
 .book-list li:last-child {
@@ -93,6 +105,8 @@ header {
   color: var(--color-text-muted);
 }
 
+/* Keep inputs/buttons visually aligned regardless of whether content came
+   from the first page load or a later HTMX swap. */
 input,
 button {
   padding: var(--space-sm);
@@ -113,6 +127,13 @@ form button {
 form input {
   flex-grow: 1;
   border: var(--border-hairline);
+}
+
+.form-error {
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-sm);
+  color: var(--color-accent);
+  font-weight: 600;
 }
 
 .add-book-form {

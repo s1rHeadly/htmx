@@ -1,3 +1,6 @@
+// Seed data for the lesson. This array is imported directly by src/server.js.
+// Because POST /books pushes into this same in-memory array, new books appear
+// immediately but are lost when the Node process restarts.
 const BOOKS_DATA = [
   { id: "1", title: "The Final Empire", author: "Brandon Sanderson" },
   { id: "2", title: "Blueprints for a Quiet Room", author: "Morgan Vale" },

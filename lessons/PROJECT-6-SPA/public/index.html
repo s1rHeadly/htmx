@@ -4,21 +4,47 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Books App</title>
-    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+
     <link rel="stylesheet" href="/css/styles.css" />
+    <!--
+      Load app JS first and HTMX second, both with `defer`.
+      Why: inline `hx-on` handlers call global window functions from scripts.js.
+      Keeping order explicit helps avoid "function is not defined" surprises.
+    -->
+    <script src="/js/scripts.js" defer></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
   </head>
   <body>
-    <h1>Books App</h1>
-    <button hx-get="/books" hx-target="#output" hx-swap="innerHTML">
-      Load Books
-    </button>
+    <main>
+      <h1>Books App</h1>
+      <!-- HTMX asks the server for HTML, then swaps it into #output. -->
+      <button
+        hx-get="/books"
+        hx-target="#output"
+        hx-swap="innerHTML"
+        class="load-btn"
+        hx-on::after-request="toggleBooksButton(this)"
+      >
+        Load Books
+      </button>
 
-    <form hx-post="/books" hx-target="#output" hx-swap="innerHTML">
-      <input type="text" name="title" placeholder="Book title" />
-      <input type="text" name="author" placeholder="Author" />
-      <button type="submit">Add Book</button>
-    </form>
+      <!--
+        Form submits directly to Hono via HTMX.
+        Server returns updated HTML list fragment; form resets after request.
+      -->
+      <form
+        hx-post="/books"
+        hx-target="#output"
+        hx-swap="innerHTML"
+        hx-on::after-request="this.reset()"
+      >
+        <input type="text" name="title" placeholder="Book title" required />
+        <input type="text" name="author" placeholder="Author" required />
+        <button type="submit">Add Book</button>
+      </form>
 
-    <div id="output"></div>
+      <!-- HTMX target container for /books fragment responses. -->
+      <div id="output"></div>
+    </main>
   </body>
 </html>

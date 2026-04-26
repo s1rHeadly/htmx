@@ -9,6 +9,16 @@
   </head>
   <body>
     <h1>Books App</h1>
-    <button>Load Books</button>
+    <button hx-get="/books" hx-target="#output" hx-swap="innerHTML">
+      Load Books
+    </button>
+
+    <form hx-post="/books" hx-target="#output" hx-swap="innerHTML">
+      <input type="text" name="title" placeholder="Book title" />
+      <input type="text" name="author" placeholder="Author" />
+      <button type="submit">Add Book</button>
+    </form>
+
+    <div id="output"></div>
   </body>
 </html>

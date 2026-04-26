@@ -7,6 +7,7 @@ import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import BOOKS_DATA from "../data/bookdata.js";
+import { renderBookList } from "./utils/helpers.js";
 
 // `Hono()` is your app object. You attach routes to it (URLs + what to return).
 const app = new Hono();
@@ -15,15 +16,15 @@ const app = new Hono();
 // For ANY path (/*), look for a matching file under ./public first.
 // Example: / → public/index.html, /css/styles.css → public/css/styles.css
 // If there is NO file for that path, Hono skips ahead to the next handler
-// (so /books is not a file — it reaches the route below).
+// (so /books is not a file — it reaches the route).
+
+// “Think of rhe public folder as the web root”
 app.use("/*", serveStatic({ root: "./public" }));
 
 // --- API route: return JSON (good for fetch() or for HTMX later) ------------
 // GET /books → browser or JavaScript receives the book list as JSON.
 // `c` is the "context": it holds the request and helpers like c.json().
-app.get("/books", (c) => {
-  return c.json(BOOKS_DATA);
-});
+app.get("/books", (c) => c.html(renderBookList(BOOKS_DATA)));
 
 // --- Start listening ------------------------------------------------------------
 // Opens port 3000. Your terminal shows the server running; visit:

@@ -118,6 +118,46 @@ These define **which HTTP method** and **which URL** to call.
 
 ---
 
+## What `hx-select` does (optional advanced feature)
+
+```html
+hx-select="#form_email_29705"
+```
+
+This means: **from the response HTML, only take this element** (a CSS selector).
+
+It does **not**:
+
+- change the server response
+- change the request
+- control backend output
+
+It only **filters the response after it arrives**—HTMX parses the full response, finds the matching node(s), and swaps *that* into the target.
+
+Useful when the server returns a full page or a large fragment but you only want one piece (e.g. a form block from a CMS asset).
+
+### Mental model (very important)
+
+Think of HTMX like this:
+
+```
+User action
+   ↓
+hx-post sends request
+   ↓
+Server (Matrix) responds with HTML
+   ↓
+hx-select (optional filter)
+   ↓
+hx-target chooses where it goes
+   ↓
+hx-swap decides how it replaces
+```
+
+`hx-get` works the same way—only the HTTP verb changes. The pipeline is always: **action → request → HTML response → (optional select) → target → swap**.
+
+---
+
 ## What the server should return
 
 For the usual HTMX flow, endpoints return **HTML snippets**, not JSON.
